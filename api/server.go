@@ -1,6 +1,7 @@
 package api
 
 import (
+    "net/http"
     "github.com/gin-gonic/gin"
     "github.com/dvdalilue/invopop/api/basket"
     "github.com/dvdalilue/invopop/api/product"
@@ -15,8 +16,27 @@ type Server struct {
     router *gin.Engine
 }
 
+func ObjectIDMiddleware(c *gin.Context) {
+    var obj common.Object
+
+    if err := c.ShouldBindUri(&obj); err != nil {
+        c.JSON(http.StatusBadRequest, common.APIResponse{
+            Code: http.StatusBadRequest,
+            Message: err.Error(),
+        })
+        c.Set("id", int64(-1))
+        c.Next()
+        // return
+    }
+
+    c.Set("id", obj.ID)
+    c.Next()
+}
+
 func NewServer(store db.Store) *Server {
     router := gin.Default()
+
+    router.Use(ObjectIDMiddleware)
 
     router.NoRoute(func(c *gin.Context) {
         c.JSON(404, common.APIResponse{

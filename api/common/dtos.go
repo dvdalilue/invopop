@@ -14,3 +14,9 @@ type HealthResponse struct {
     // message
     Status string `json:"status,omitempty"`
 }
+
+type Object struct {
+
+	// id
+    ID int64 `uri:"id"`
+}

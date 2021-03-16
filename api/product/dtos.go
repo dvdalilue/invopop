@@ -15,5 +15,5 @@ type Product struct {
 type Products struct {
 
     // items
-    Items []*Product `json:"items"`
+    Items []*Product `json:"products"`
 }

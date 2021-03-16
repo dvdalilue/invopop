@@ -12,7 +12,7 @@ func toBasketDto(
     s db.Store,
     b *db.Basket,
 ) (*Basket, *db.Error) {
-    products, err := s.GetBasketProducts(c)
+    products, err := s.GetBasketProducts(c, b.ID)
 
     if err != nil {
         return nil, err
@@ -26,17 +26,12 @@ func toBasketDto(
         total += p.Price
     }
 
-    return &Basket{items, total}, nil
+    return &Basket{b.ID, items, total}, nil
 }
 
 func createBasket(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
-        basket, err := s.CreateBasket(c)
-
-        if err != nil {
-            c.JSON(err.Code, err.ToAPIResponse())
-            return
-        }
+        basket := s.CreateBasket(c)
 
         res, err := toBasketDto(c, s, basket)
 
@@ -51,9 +46,38 @@ func createBasket(s db.Store) func(*gin.Context) {
     return handler
 }
 
+func getBaskets(s db.Store) func(*gin.Context) {
+    handler := func(c *gin.Context) {
+        baskets := s.GetBaskets(c)
+
+        var res []*Basket = []*Basket{}
+
+        for _, bsk := range baskets {
+            basket, err := toBasketDto(c, s, bsk)
+
+            if err != nil {
+                c.JSON(err.Code, err.ToAPIResponse())
+                return
+            }
+
+            res = append(res, basket)
+        }
+
+        c.JSON(http.StatusOK, &Baskets{res})
+    }
+
+    return handler
+}
+
 func getBasket(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
-        basket, err := s.GetBasket(c)
+        objID := c.MustGet("id").(int64)
+
+        if objID < 0 {
+            return
+        }
+
+        basket, err := s.GetBasket(c, objID)
 
         if err != nil {
             c.JSON(err.Code, err.ToAPIResponse())
@@ -85,7 +109,13 @@ func addBasketProduct(s db.Store) func(*gin.Context) {
             return
         }
 
-        basket, err := s.AddBasketProduct(c, req.ProductID)
+        objID := c.MustGet("id").(int64)
+
+        if objID < 0 {
+            return
+        }
+
+        basket, err := s.AddBasketProduct(c, objID, req.ProductID)
 
         if err != nil {
             c.JSON(err.Code, err.ToAPIResponse())
@@ -107,7 +137,13 @@ func addBasketProduct(s db.Store) func(*gin.Context) {
 
 func deleteBasket(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
-        err := s.DeleteBasket(c)
+        objID := c.MustGet("id").(int64)
+
+        if objID < 0 {
+            return
+        }
+
+        err := s.DeleteBasket(c, objID)
 
         if err != nil {
             c.JSON(err.Code, err.ToAPIResponse())
@@ -125,8 +161,9 @@ func IncludeOperations(r *gin.Engine, s db.Store, prefix string) {
 
     {
         basketAPI.POST("/", createBasket(s))
-        basketAPI.GET("/", getBasket(s))
-        basketAPI.DELETE("/", deleteBasket(s))
-        basketAPI.POST("/product", addBasketProduct(s))
+        basketAPI.GET("/", getBaskets(s))
+        basketAPI.GET("/:id", getBasket(s))
+        basketAPI.DELETE("/:id", deleteBasket(s))
+        basketAPI.POST("/:id/product", addBasketProduct(s))
     }
 }

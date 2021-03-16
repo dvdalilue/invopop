@@ -15,9 +15,11 @@ type Pair struct {
 }
 
 type InMemoryStore struct {
-    basket *Basket
+    baskets []*Basket
     products []*Product
     basketProducts []*Pair
+
+    basketSeq int64
 }
 
 func (ms *InMemoryStore) SetProducts(ps []*Product) {
@@ -25,46 +27,75 @@ func (ms *InMemoryStore) SetProducts(ps []*Product) {
 }
 
 func (ms *InMemoryStore) Init() {
+    ms.baskets = []*Basket{}
     ms.products = []*Product{}
     ms.basketProducts = []*Pair{}
+    ms.basketSeq = 1
 }
 
 // Interface methods
 
-func (ms *InMemoryStore) CreateBasket(ctx context.Context) (*Basket, *Error) {
-    if ms.basket != nil {
-        return ms.basket, &Error{
-            Code: http.StatusConflict,
-            Message: "The basket is already created",
-        }
-    }
+func (ms *InMemoryStore) CreateBasket(ctx context.Context) *Basket {
+    basketID := ms.basketSeq
 
-    ms.basket = &Basket{ID:1, Name:"default"}
+    ms.basketSeq += 1
 
-    return ms.basket, nil
+    basket := &Basket{ID: basketID, Name:"default"}
+
+    ms.baskets = append(ms.baskets, basket)
+
+    return basket
 }
 
-func (ms *InMemoryStore) GetBasket(ctx context.Context) (*Basket, *Error) {
-    if ms.basket == nil {
-        return nil, &Error{
-            Code: http.StatusNotFound,
-            Message: "There is no basket",
-        }
+func (ms *InMemoryStore) GetBaskets(ctx context.Context) []*Basket {
+    if ms.baskets == nil {
+        return []*Basket{}
     }
 
-    return ms.basket, nil
+    return ms.baskets
 }
 
-func (ms *InMemoryStore) DeleteBasket(ctx context.Context) *Error {
-    if ms.basket == nil {
-        return &Error{
+func (ms *InMemoryStore) getBasketIndex(
+    ctx context.Context,
+    id int64,
+) (*Basket, int, *Error) {
+    if len(ms.baskets) <= 0 {
+        return nil, -1, &Error{
             Code: http.StatusNotFound,
-            Message: "There is no basket to delete",
+            Message: "There are no baskets",
         }
     }
 
-    ms.basket = nil
-    ms.basketProducts = []*Pair{}
+    for idx, value := range ms.baskets {
+        if value.ID == id {
+            return value, idx, nil
+        }
+    }
+
+    return nil, -1, &Error{
+        Code: http.StatusNotFound,
+        Message: "Basket not found",
+    }
+}
+
+func (ms *InMemoryStore) GetBasket(
+    ctx context.Context,
+    id int64,
+) (*Basket, *Error) {
+    basket, _, err := ms.getBasketIndex(ctx, id)
+
+    return basket, err
+}
+
+func (ms *InMemoryStore) DeleteBasket(ctx context.Context, id int64) *Error {
+    _, idx, err := ms.getBasketIndex(ctx, id)
+
+    if err != nil {
+        return err
+    }
+
+    ms.baskets = append(ms.baskets[:idx], ms.baskets[idx+1:]...)
+    // ms.basketProducts = []*Pair{}
 
     return nil
 }
@@ -101,9 +132,10 @@ func (ms *InMemoryStore) GetProduct(
 
 func (ms *InMemoryStore) AddBasketProduct(
     ctx context.Context,
+    basketID int64,
     productID int64,
 ) (*Basket, *Error) {
-    basket, err := ms.GetBasket(ctx)
+    basket, err := ms.GetBasket(ctx, basketID)
 
     if err != nil {
         return nil, err
@@ -116,7 +148,7 @@ func (ms *InMemoryStore) AddBasketProduct(
     }
 
     ms.basketProducts = append(ms.basketProducts, &Pair{
-        basketID: ms.basket.ID,
+        basketID: basket.ID,
         productID: product.ID,
     })
 
@@ -125,8 +157,9 @@ func (ms *InMemoryStore) AddBasketProduct(
 
 func (ms *InMemoryStore) GetBasketProducts(
     ctx context.Context,
+    basketID int64,
 ) ([]*Product, *Error) {
-    basket, err := ms.GetBasket(ctx)
+    basket, err := ms.GetBasket(ctx, basketID)
 
     if err != nil {
         return nil, err
