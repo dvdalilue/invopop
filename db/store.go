@@ -3,6 +3,7 @@ package db
 import (
     "net/http"
     "context"
+    "sync"
 )
 
 type Store interface {
@@ -20,6 +21,7 @@ type InMemoryStore struct {
     basketProducts []*Pair
 
     basketSeq int64
+    mux *sync.RWMutex
 }
 
 func (ms *InMemoryStore) SetProducts(ps []*Product) {
@@ -31,6 +33,7 @@ func (ms *InMemoryStore) Init() {
     ms.products = []*Product{}
     ms.basketProducts = []*Pair{}
     ms.basketSeq = 1
+    ms.mux = &sync.RWMutex{}
 }
 
 //
@@ -63,13 +66,12 @@ func (ms *InMemoryStore) getBasketIndex(
 }
 
 func (ms *InMemoryStore) CreateBasket(ctx context.Context) *Basket {
-    basketID := ms.basketSeq
+    ms.mux.Lock()
+    basket := &Basket{ID: ms.basketSeq, Name:"default"}
 
     ms.basketSeq += 1
-
-    basket := &Basket{ID: basketID, Name:"default"}
-
     ms.baskets = append(ms.baskets, basket)
+    ms.mux.Unlock()
 
     return basket
 }
@@ -98,17 +100,18 @@ func (ms *InMemoryStore) DeleteBasket(ctx context.Context, id int64) *Error {
         return err
     }
 
-    ms.baskets = append(ms.baskets[:idx], ms.baskets[idx+1:]...)
-
     var newPairs []*Pair
 
+    ms.mux.Lock()
     for _, pair := range ms.basketProducts {
         if pair.basketID != id {
             newPairs = append(newPairs, pair)
         }
     }
 
+    ms.baskets = append(ms.baskets[:idx], ms.baskets[idx+1:]...)
     ms.basketProducts = newPairs
+    ms.mux.Unlock()
 
     return nil
 }
@@ -164,10 +167,12 @@ func (ms *InMemoryStore) AddBasketProduct(
         return nil, err
     }
 
+    ms.mux.Lock()
     ms.basketProducts = append(ms.basketProducts, &Pair{
         basketID: basket.ID,
         productID: product.ID,
     })
+    ms.mux.Unlock()
 
     return basket, nil
 }
