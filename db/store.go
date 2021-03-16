@@ -67,7 +67,7 @@ func (ms *InMemoryStore) getBasketIndex(
 
 func (ms *InMemoryStore) CreateBasket(ctx context.Context) *Basket {
     ms.mux.Lock()
-    basket := &Basket{ID: ms.basketSeq, Name:"default"}
+    basket := &Basket{ID: ms.basketSeq}
 
     ms.basketSeq += 1
     ms.baskets = append(ms.baskets, basket)
