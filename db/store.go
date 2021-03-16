@@ -155,6 +155,7 @@ func (ms *InMemoryStore) AddBasketProduct(
     basketID int64,
     productID int64,
 ) (*Basket, *Error) {
+    ms.mux.Lock()
     basket, err := ms.GetBasket(ctx, basketID)
 
     if err != nil {
@@ -167,7 +168,6 @@ func (ms *InMemoryStore) AddBasketProduct(
         return nil, err
     }
 
-    ms.mux.Lock()
     ms.basketProducts = append(ms.basketProducts, &Pair{
         basketID: basket.ID,
         productID: product.ID,
