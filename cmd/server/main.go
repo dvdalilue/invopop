@@ -8,26 +8,7 @@ import (
 )
 
 func main() {
-    mStore := &db.InMemoryStore{}
-    mStore.Init()
-
-    mStore.SetProducts([]*db.Product{
-        &db.Product{
-            ID: 1,
-            Name: "PEN",
-            Price: 5.00,
-        },
-        &db.Product{
-            ID: 2,
-            Name: "TSHIRT",
-            Price: 20.00,
-        },
-        &db.Product{
-            ID: 3,
-            Name: "MUG",
-            Price: 7.50,
-        },
-    })
+    mStore := db.NewInMemoryStore()
 
     server := api.NewServer(mStore)
 

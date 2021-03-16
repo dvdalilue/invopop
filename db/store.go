@@ -24,16 +24,31 @@ type InMemoryStore struct {
     mux *sync.RWMutex
 }
 
-func (ms *InMemoryStore) SetProducts(ps []*Product) {
-    ms.products = ps
-}
+func NewInMemoryStore() Store {
+    return &InMemoryStore{
+        baskets: []*Basket{},
+        basketProducts: []*Pair{},
+        basketSeq: 1,
+        mux: &sync.RWMutex{},
 
-func (ms *InMemoryStore) Init() {
-    ms.baskets = []*Basket{}
-    ms.products = []*Product{}
-    ms.basketProducts = []*Pair{}
-    ms.basketSeq = 1
-    ms.mux = &sync.RWMutex{}
+        products: []*Product{
+            &Product{
+                ID: 1,
+                Name: "PEN",
+                Price: 5.00,
+            },
+            &Product{
+                ID: 2,
+                Name: "TSHIRT",
+                Price: 20.00,
+            },
+            &Product{
+                ID: 3,
+                Name: "MUG",
+                Price: 7.50,
+            },
+        },
+    }
 }
 
 //
