@@ -95,7 +95,16 @@ func (ms *InMemoryStore) DeleteBasket(ctx context.Context, id int64) *Error {
     }
 
     ms.baskets = append(ms.baskets[:idx], ms.baskets[idx+1:]...)
-    // ms.basketProducts = []*Pair{}
+
+    var newPairs []*Pair
+
+    for _, pair := range ms.basketProducts {
+        if pair.basketID != id {
+            newPairs = append(newPairs, pair)
+        }
+    }
+
+    ms.basketProducts = newPairs
 
     return nil
 }
