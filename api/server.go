@@ -26,7 +26,6 @@ func ObjectIDMiddleware(c *gin.Context) {
         })
         c.Set("id", int64(-1))
         c.Next()
-        // return
     }
 
     c.Set("id", obj.ID)
