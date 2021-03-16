@@ -16,7 +16,7 @@ type Server struct {
     router *gin.Engine
 }
 
-func ObjectIDMiddleware(c *gin.Context) {
+func PathIDMiddleware(c *gin.Context) {
     var obj common.Object
 
     if err := c.ShouldBindUri(&obj); err != nil {
@@ -35,7 +35,7 @@ func ObjectIDMiddleware(c *gin.Context) {
 func NewServer(store db.Store) *Server {
     router := gin.Default()
 
-    router.Use(ObjectIDMiddleware)
+    router.Use(PathIDMiddleware)
 
     router.NoRoute(func(c *gin.Context) {
         c.JSON(404, common.APIResponse{
