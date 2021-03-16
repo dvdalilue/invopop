@@ -33,27 +33,11 @@ func (ms *InMemoryStore) Init() {
     ms.basketSeq = 1
 }
 
+//
 // Interface methods
+//
 
-func (ms *InMemoryStore) CreateBasket(ctx context.Context) *Basket {
-    basketID := ms.basketSeq
-
-    ms.basketSeq += 1
-
-    basket := &Basket{ID: basketID, Name:"default"}
-
-    ms.baskets = append(ms.baskets, basket)
-
-    return basket
-}
-
-func (ms *InMemoryStore) GetBaskets(ctx context.Context) []*Basket {
-    if ms.baskets == nil {
-        return []*Basket{}
-    }
-
-    return ms.baskets
-}
+// Basket methods
 
 func (ms *InMemoryStore) getBasketIndex(
     ctx context.Context,
@@ -76,6 +60,26 @@ func (ms *InMemoryStore) getBasketIndex(
         Code: http.StatusNotFound,
         Message: "Basket not found",
     }
+}
+
+func (ms *InMemoryStore) CreateBasket(ctx context.Context) *Basket {
+    basketID := ms.basketSeq
+
+    ms.basketSeq += 1
+
+    basket := &Basket{ID: basketID, Name:"default"}
+
+    ms.baskets = append(ms.baskets, basket)
+
+    return basket
+}
+
+func (ms *InMemoryStore) GetBaskets(ctx context.Context) []*Basket {
+    if ms.baskets == nil {
+        return []*Basket{}
+    }
+
+    return ms.baskets
 }
 
 func (ms *InMemoryStore) GetBasket(
@@ -109,6 +113,8 @@ func (ms *InMemoryStore) DeleteBasket(ctx context.Context, id int64) *Error {
     return nil
 }
 
+// Product methods
+
 func (ms *InMemoryStore) GetProducts(ctx context.Context) []*Product {
     if ms.products == nil {
         return []*Product{}
@@ -138,6 +144,8 @@ func (ms *InMemoryStore) GetProduct(
 
     return nil, notFound
 }
+
+// Combined methods
 
 func (ms *InMemoryStore) AddBasketProduct(
     ctx context.Context,
