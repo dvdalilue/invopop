@@ -12,6 +12,9 @@ func toBasketDto(
     s db.Store,
     b *db.Basket,
 ) (*Basket, *db.Error) {
+    var prices = make(map[int64]float64)
+    var quantities = make(map[int64]int)
+
     products, err := s.GetBasketProducts(c, b.ID)
 
     if err != nil {
@@ -19,14 +22,25 @@ func toBasketDto(
     }
 
     var items []string = []string{}
-    var total float64 = 0.0
+    var subTotal float64 = 0.0
 
     for _, p := range products {
+        _, exists := quantities[p.ID]
+
+        if exists {
+            quantities[p.ID] += 1
+        } else {
+            prices[p.ID] = p.Price
+            quantities[p.ID] = 1
+        }
+
         items = append(items, p.Name)
-        total += p.Price
+        subTotal += p.Price
     }
 
-    return &Basket{b.ID, items, total}, nil
+    dm := NewDiscountManager(subTotal, quantities, prices)
+
+    return &Basket{b.ID, items, dm.getTotal()}, nil
 }
 
 func createBasket(s db.Store) func(*gin.Context) {
