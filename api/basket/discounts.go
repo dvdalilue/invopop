@@ -49,9 +49,9 @@ func (dm *DiscountManager) getTotal() float64 {
 
         price := dm.prices[id]
 
-        for _, f := range discounts {
+        for _, discountFunc := range discounts {
             original = float64(quantity) * price
-            reduced = f(quantity, price)
+            reduced = discountFunc(quantity, price)
 
             total -= original - reduced
         }
