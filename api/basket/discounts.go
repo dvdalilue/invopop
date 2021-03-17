@@ -14,6 +14,10 @@ func bulkDiscount(n int, price float64) float64 {
     return float64(n) * finalPrice
 }
 
+// The idea behind this struct is to define a list of discounts
+// that any product can have and compute the total based the
+// subtotal, quantities and prices. This is more like a
+// 'CheckoutManager'
 type DiscountManager struct {
     subTotal float64
     quantities map[int64]int
@@ -37,6 +41,7 @@ func NewDiscountManager(
     }
 }
 
+// Applies all the discount and gets the final total
 func (dm *DiscountManager) getTotal() float64 {
     var total float64 = dm.subTotal
     var original float64

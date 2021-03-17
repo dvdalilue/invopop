@@ -7,6 +7,9 @@ import (
     "github.com/dvdalilue/invopop/api/common"
 )
 
+// Mapper function to translate a basket model into a friendlier
+// DTO. Get the basket/product relations and creates a 'summary'
+// object with the list of items and total to pay (with discounts)
 func toBasketDto(
     c *gin.Context,
     s db.Store,
@@ -43,6 +46,9 @@ func toBasketDto(
     return &Basket{b.ID, items, dm.getTotal()}, nil
 }
 
+// Handler function to create a basket. It's assumed that this is
+// always successful. The basket model object is mapped to a DTO
+// hidding the Store model
 func createBasket(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
         basket := s.CreateBasket(c)
@@ -60,6 +66,8 @@ func createBasket(s db.Store) func(*gin.Context) {
     return handler
 }
 
+// Handler function to get all baskets. The basket model object is
+// mapped to a DTO as before
 func getBaskets(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
         baskets := s.GetBaskets(c)
@@ -83,6 +91,8 @@ func getBaskets(s db.Store) func(*gin.Context) {
     return handler
 }
 
+// Handler function to get a single basket, the 'id' is a
+// path parameter extracted in the 'PathIDMiddleware'
 func getBasket(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
         objID := c.MustGet("id").(int64)
@@ -111,6 +121,10 @@ func getBasket(s db.Store) func(*gin.Context) {
     return handler
 }
 
+// Handler function to add a product to a basket, the 'id' is a
+// path parameter extracted in the 'PathIDMiddleware' and the
+// product 'id' is received in the request's body which is checked
+// with the 'AddBasketProduct' DTO
 func addBasketProduct(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
         var req AddBasketProduct
@@ -149,6 +163,8 @@ func addBasketProduct(s db.Store) func(*gin.Context) {
     return handler
 }
 
+// Handler function to remove a basket, the 'id' is a path
+// parameter extracted in the 'PathIDMiddleware'
 func deleteBasket(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
         objID := c.MustGet("id").(int64)
@@ -170,6 +186,8 @@ func deleteBasket(s db.Store) func(*gin.Context) {
     return handler
 }
 
+// Includes basket operations in a router based on the prefix
+// parameter and pass the store to the handlers
 func IncludeOperations(r *gin.Engine, s db.Store, prefix string) {
     basketAPI := r.Group(prefix)
 
