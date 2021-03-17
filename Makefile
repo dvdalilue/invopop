@@ -20,5 +20,8 @@ run-server:
 run-client:
 	go run cmd/client/main.go
 
+unit-test:
+	go test ./test
+
 clean:
 	rm server client

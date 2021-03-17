@@ -4,3 +4,6 @@ main
 doc
 .gitignore
 README.md
+Makefile
+test
+doc
