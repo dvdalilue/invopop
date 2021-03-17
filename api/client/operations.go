@@ -38,7 +38,7 @@ func (c *Client) listProducts() {
     c.sendProductsRequest(http.MethodGet, &ps)
 
     for _, p := range ps.Items {
-        fmt.Printf("ID: %d, Name: %s, Price: %.2f\n",
+        fmt.Printf("ID: %d, Name: %s, Price: %.2f€\n",
             p.ID,
             p.Name,
             p.Price,
