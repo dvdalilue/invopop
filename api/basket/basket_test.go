@@ -25,7 +25,7 @@ func TestBasketsAPI(t *testing.T) {
     tcs := []utils.TestCase{
         {
             Mock: func(store *mock.MockStore) {
-                n := utils.RandomInt(1, 10)
+                n := utils.RandomInt(1, 100)
                 baskets := utils.RandomBaskets(n)
 
                 store.EXPECT().
@@ -37,7 +37,7 @@ func TestBasketsAPI(t *testing.T) {
                     GetBasketProducts(gomock.Any(), gomock.Any()).
                     Times(int(n))
                 bps.Do(func(ctx context.Context, id int64) {
-                    k := utils.RandomInt(0, 10)
+                    k := utils.RandomInt(5, 10)
                     bps.Return(utils.RandomProducts(k), nil)
                 })
             },
@@ -130,10 +130,59 @@ func TestBasketProductAPI(t *testing.T) {
     }
 }
 
-func TestDeleteBasketAPI(t *testing.T) {
+func TestBasketAPI(t *testing.T) {
     utils.RandomInit()
 
     tcs := []utils.TestCase{
+        {
+            Mock: func(store *mock.MockStore) {
+                b := utils.RandomBasket()
+
+                store.EXPECT().
+                    GetBasket(gomock.Any(), gomock.Any()).
+                    Times(1).
+                    Return(&b, nil)
+
+                bps := store.EXPECT().
+                    GetBasketProducts(gomock.Any(), gomock.Any()).
+                    Times(1)
+                bps.Do(func(ctx context.Context, id int64) {
+                    k := utils.RandomInt(0, 10)
+                    bps.Return(utils.RandomProducts(k), nil)
+                })
+            },
+            Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+                assert.Equal(t, http.StatusOK, recorder.Code)
+            },
+        },
+        {
+            Mock: func(store *mock.MockStore) {
+                b := utils.RandomBasket()
+
+                store.EXPECT().
+                    GetBasket(gomock.Any(), gomock.Any()).
+                    Times(1).
+                    Return(&b, nil)
+
+                store.EXPECT().
+                    GetBasketProducts(gomock.Any(), gomock.Any()).
+                    Return(nil, &db.Error{Code: http.StatusNotFound, Message: ""})
+            },
+            Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+                assert.Equal(t, http.StatusNotFound, recorder.Code)
+            },
+        },
+        {
+            Mock: func(store *mock.MockStore) {
+                store.EXPECT().
+                    GetBasket(gomock.Any(), gomock.Any()).
+                    Times(1).
+                    Return(nil, &db.Error{Code: http.StatusNotFound, Message: ""})
+            },
+            Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+                assert.Equal(t, http.StatusNotFound, recorder.Code)
+            },
+        },
         {
             Mock: func(store *mock.MockStore) {
                 store.EXPECT().
@@ -144,6 +193,7 @@ func TestDeleteBasketAPI(t *testing.T) {
             Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
                 assert.Equal(t, http.StatusNoContent, recorder.Code)
             },
+            Method: http.MethodDelete,
         },
         {
             Mock: func(store *mock.MockStore) {
@@ -155,10 +205,11 @@ func TestDeleteBasketAPI(t *testing.T) {
             Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
                 assert.Equal(t, http.StatusNotFound, recorder.Code)
             },
+            Method: http.MethodDelete,
         },
     }
 
     for _, tc := range tcs {
-        utils.Tester(t, &tc, "/basket/1", http.MethodDelete)
+        utils.Tester(t, &tc, "/basket/1", http.MethodGet)
     }
 }

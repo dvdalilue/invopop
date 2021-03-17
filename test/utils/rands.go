@@ -53,7 +53,7 @@ func RandomBaskets(n int64) []*db.Basket {
 
 func RandomProduct() db.Product {
     return db.Product{
-        ID:    RandomInt(1, 1000),
+        ID:    RandomInt(1, 3),
         Name:  RandomString(10),
         Price: RandomFloat(2.0, 42.0),
     }
