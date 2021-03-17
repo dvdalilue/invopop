@@ -1,9 +1,6 @@
 
-all: get build
+all: build
 	@echo "Done"
-
-get:
-	go get -d
 
 build: build-server build-client
 	@echo "Build finished"

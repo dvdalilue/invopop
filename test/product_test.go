@@ -11,7 +11,7 @@ import (
     "github.com/stretchr/testify/assert"
 
     "github.com/dvdalilue/invopop/db"
-    "github.com/dvdalilue/invopop/api"
+    "github.com/dvdalilue/invopop/api/server"
     "github.com/dvdalilue/invopop/api/product"
     "github.com/dvdalilue/invopop/test/mock"
 )
@@ -49,7 +49,7 @@ func TestGetProductsAPI(t *testing.T) {
     store := mock.NewMockStore(ctrl)
     store.EXPECT().GetProducts(gomock.Any()).Times(1).Return(products)
 
-    server := api.NewServer(store)
+    server := server.NewServer(store)
     recorder := httptest.NewRecorder()
 
     url := "/product/"

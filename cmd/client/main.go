@@ -2,7 +2,7 @@ package main
 
 import (
     "os"
-    "github.com/dvdalilue/invopop/api"
+    "github.com/dvdalilue/invopop/api/client"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
         url = envUrl
     }
 
-    client := api.NewClient(url)
+    client := client.NewClient(url)
 
     client.Cli()
 }

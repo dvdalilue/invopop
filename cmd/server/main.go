@@ -3,14 +3,14 @@ package main
 import (
     "os"
     "fmt"
-    "github.com/dvdalilue/invopop/api"
+    "github.com/dvdalilue/invopop/api/server"
     "github.com/dvdalilue/invopop/db"
 )
 
 func main() {
     mStore := db.NewInMemoryStore()
 
-    server := api.NewServer(mStore)
+    server := server.NewServer(mStore)
 
     port := ":8080"
 

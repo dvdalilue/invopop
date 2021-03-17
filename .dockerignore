@@ -1,6 +1,6 @@
-server
-client
-main
+/server
+/client
+/main
 doc
 .gitignore
 README.md
