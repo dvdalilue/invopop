@@ -109,6 +109,7 @@ func (ms *InMemoryStore) GetBasket(
 }
 
 func (ms *InMemoryStore) DeleteBasket(ctx context.Context, id int64) *Error {
+    ms.mux.Lock()
     _, idx, err := ms.getBasketIndex(ctx, id)
 
     if err != nil {
@@ -117,7 +118,6 @@ func (ms *InMemoryStore) DeleteBasket(ctx context.Context, id int64) *Error {
 
     var newPairs []*Pair
 
-    ms.mux.Lock()
     for _, pair := range ms.basketProducts {
         if pair.basketID != id {
             newPairs = append(newPairs, pair)
