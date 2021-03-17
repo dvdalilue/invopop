@@ -1,9 +1,11 @@
 package basket_test
 
 import (
-    // "io/ioutil"
+    "io"
+    "fmt"
     "testing"
-    // "encoding/json"
+    "bytes"
+    "encoding/json"
     "net/http"
     "context"
     "net/http/httptest"
@@ -12,9 +14,9 @@ import (
     "github.com/stretchr/testify/assert"
 
     "github.com/dvdalilue/invopop/db"
+    "github.com/dvdalilue/invopop/api/basket"
     "github.com/dvdalilue/invopop/test/mock"
     "github.com/dvdalilue/invopop/test/utils"
-    // "github.com/dvdalilue/invopop/api/product"
 )
 
 func TestBasketsAPI(t *testing.T) {
@@ -61,10 +63,70 @@ func TestBasketsAPI(t *testing.T) {
                 assert.Equal(t, http.StatusNotFound, recorder.Code)
             },
         },
+        {
+            Mock: func(store *mock.MockStore) {
+                basket := utils.RandomBasket()
+
+                store.EXPECT().
+                    CreateBasket(gomock.Any()).
+                    Times(1).
+                    Return(&basket)
+
+                store.EXPECT().
+                    GetBasketProducts(gomock.Any(), gomock.Any()).
+                    Times(1).
+                    Return(utils.RandomProducts(0), nil)
+            },
+            Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+                assert.Equal(t, http.StatusOK, recorder.Code)
+            },
+            Method: http.MethodPost,
+        },
     }
 
     for _, tc := range tcs {
         utils.Tester(t, &tc, "/basket/", http.MethodGet)
+    }
+}
+
+func TestBasketProductAPI(t *testing.T) {
+    utils.RandomInit()
+
+    b := utils.RandomBasket()
+    p := utils.RandomProduct()
+
+    tcs := []utils.TestCase{
+        {
+            Mock: func(store *mock.MockStore) {
+
+                store.EXPECT().
+                    AddBasketProduct(gomock.Any(), gomock.Any(), gomock.Any()).
+                    Times(1).
+                    Return(&b, nil)
+
+                store.EXPECT().
+                    GetBasketProducts(gomock.Any(), gomock.Any()).
+                    Times(1).
+                    Return([]*db.Product{&p}, nil)
+            },
+            Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+                assert.Equal(t, http.StatusOK, recorder.Code)
+            },
+            Body: func() io.Reader {
+                payload := new(bytes.Buffer)
+                body := &basket.AddBasketProduct{ProductID: p.ID}
+
+                json.NewEncoder(payload).Encode(body)
+
+                return payload
+            }(),
+        },
+    }
+
+    url := fmt.Sprintf("/basket/%d/product", b.ID)
+
+    for _, tc := range tcs {
+        utils.Tester(t, &tc, url, http.MethodPost)
     }
 }
 

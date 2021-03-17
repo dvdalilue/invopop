@@ -1,6 +1,7 @@
 package utils
 
 import (
+    "io"
     "testing"
     "net/http"
     "net/http/httptest"
@@ -15,6 +16,8 @@ import (
 type TestCase struct {
     Mock func(store *mock.MockStore)
     Assert func(t *testing.T, recoder *httptest.ResponseRecorder)
+    Method string
+    Body io.Reader
 }
 
 func Tester(t *testing.T, tc *TestCase, url string, method string) {
@@ -27,7 +30,13 @@ func Tester(t *testing.T, tc *TestCase, url string, method string) {
     server := server.NewServer(store)
     recorder := httptest.NewRecorder()
 
-    request, err := http.NewRequest(method, url, nil)
+    var httpMethod = method
+
+    if tc.Method != "" {
+        httpMethod = tc.Method
+    }
+
+    request, err := http.NewRequest(httpMethod, url, tc.Body)
     assert.NoError(t, err)
 
     server.ServeHTTP(recorder, request)
