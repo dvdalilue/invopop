@@ -8,7 +8,6 @@ import (
     "io"
     "io/ioutil"
     "encoding/json"
-    "github.com/dvdalilue/invopop/api/basket"
 )
 
 func (c *Client) sendRequest(
@@ -66,7 +65,7 @@ func (c *Client) sendBasketRequest(
 func (c *Client) sendBasketProductRequest(
     id string,
     method string,
-    body *basket.AddBasketProduct,
+    body interface{},
     obj interface{},
 ) {
     payload := new(bytes.Buffer)
