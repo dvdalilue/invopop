@@ -10,13 +10,9 @@ func getProducts(s db.Store) func(*gin.Context) {
     handler := func(c *gin.Context) {
         products := s.GetProducts(c)
 
-        var res []*Product = []*Product{}
+        res := ToProductsDto(products)
 
-        for _, p := range products {
-            res = append(res, &Product{p.ID, p.Name, p.Price})
-        }
-
-        c.JSON(http.StatusOK, &Products{res})
+        c.JSON(http.StatusOK, res)
     }
 
     return handler

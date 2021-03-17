@@ -59,3 +59,7 @@ func NewServer(store db.Store) *Server {
 func (s *Server) Listen(port string) {
     s.router.Run(port)
 }
+
+func (s *Server) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+    s.router.ServeHTTP(rw, req)
+}
