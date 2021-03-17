@@ -18,7 +18,7 @@ run-client:
 	go run cmd/client/main.go
 
 unit-test:
-	go test -cover ./api/... ./cmd/...
+	go test -cover ./api/basket/... ./api/product/...
 
 clean:
 	rm server client

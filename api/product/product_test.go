@@ -10,7 +10,6 @@ import (
     "github.com/golang/mock/gomock"
     "github.com/stretchr/testify/assert"
 
-    "github.com/dvdalilue/invopop/api/server"
     "github.com/dvdalilue/invopop/api/product"
     "github.com/dvdalilue/invopop/test/mock"
     "github.com/dvdalilue/invopop/test/utils"
@@ -22,30 +21,32 @@ func TestGetProductsAPI(t *testing.T) {
     n := utils.RandomInt(0, 10)
     products := utils.RandomProducts(n)
 
-    ctrl := gomock.NewController(t)
-    defer ctrl.Finish()
+    tcs := []utils.TestCase{
+        {
+            Mock: func(store *mock.MockStore) {
+                store.EXPECT().
+                    GetProducts(gomock.Any()).
+                    Times(1).
+                    Return(products)
+            },
+            Assert: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+                assert.Equal(t, http.StatusOK, recorder.Code)
 
-    store := mock.NewMockStore(ctrl)
-    store.EXPECT().GetProducts(gomock.Any()).Times(1).Return(products)
+                res := *product.ToProductsDto(products)
 
-    server := server.NewServer(store)
-    recorder := httptest.NewRecorder()
+                data, err := ioutil.ReadAll(recorder.Body)
+                assert.NoError(t, err)
 
-    url := "/product/"
-    request, err := http.NewRequest(http.MethodGet, url, nil)
-    assert.NoError(t, err)
+                var responseProducts product.Products
+                err = json.Unmarshal(data, &responseProducts)
+                assert.NoError(t, err)
 
-    server.ServeHTTP(recorder, request)
-    assert.Equal(t, http.StatusOK, recorder.Code)
+                assert.Equal(t, responseProducts, res)
+            },
+        },
+    }
 
-    var res product.Products = *product.ToProductsDto(products)
-
-    data, err := ioutil.ReadAll(recorder.Body)
-    assert.NoError(t, err)
-
-    var gotProducts product.Products
-    err = json.Unmarshal(data, &gotProducts)
-    assert.NoError(t, err)
-
-    assert.Equal(t, gotProducts, res)
+    for _, tc := range tcs {
+        utils.Tester(t, &tc, "/product/", http.MethodGet)
+    }
 }
